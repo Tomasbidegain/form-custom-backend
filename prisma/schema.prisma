@@ -1,0 +1,117 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Get a free hosted Postgres database in seconds: `npx create-db`
+
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model User {
+  id           String  @id @default(uuid())
+  email        String  @unique
+  name         String
+  lastName     String
+  googleId     String? @unique
+  passwordHash String?
+  photoUrl     String?
+  isVerified          Boolean   @default(false)
+  verificationToken   String?   @unique
+  verificationExpires DateTime?
+
+  forms     Form[]
+  responses FormResponse[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Form {
+  id                   String    @id @default(uuid())
+  title                String
+  description           String?
+  isPublished          Boolean   @default(false)
+  expiresAt            DateTime?
+  maxResponses         Int?
+  currentResponseCount Int       @default(0)
+  requireEmail         Boolean   @default(false)
+  oneResponsePerEmail  Boolean   @default(false)
+  captchaEnabled       Boolean   @default(true)
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id])
+
+  fields    Field[]
+  responses FormResponse[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+enum TypeField {
+  TEXT
+  NUMBER
+  EMAIL
+  DATE
+  TIME
+  DATETIME
+  SELECT
+  MULTISELECT
+  RADIO
+  CHECKBOX
+  FILE
+}
+
+model Field {
+  id       String    @id @default(uuid())
+  label    String
+  type     TypeField
+  required Boolean   @default(false)
+  options  Json?
+  gridX    Int       @default(0) // Columna de inicio (0-11)
+  gridY    Int       @default(0) // Fila de inicio
+  gridW    Int       @default(12) // Ancho en columnas (1-12)
+  gridH    Int       @default(1) // Alto en filas
+
+  formId String
+  form   Form   @relation(fields: [formId], references: [id])
+
+  fieldResponses FieldResponse[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model FormResponse {
+  id        String  @id @default(uuid())
+  email     String?
+  ipAddress String?
+
+  formId String
+  form   Form   @relation(fields: [formId], references: [id])
+
+  userId String?
+  user   User?   @relation(fields: [userId], references: [id])
+
+  fieldResponses FieldResponse[]
+
+  submittedAt DateTime @default(now())
+}
+
+model FieldResponse {
+  id String @id @default(uuid())
+  value String
+
+  formResponseId String
+  formResponse   FormResponse @relation(fields: [formResponseId], references: [id])
+
+  fieldId String
+  field   Field  @relation(fields: [fieldId], references: [id])
+
+  createdAt DateTime @default(now())
+}
