@@ -1,9 +1,10 @@
 import bcrypt from 'bcrypt'
 import crypto from 'crypto'
 import prisma from '../config/database'
-import type { RegisterDTO, RegisterResponse, VerifyEmailResponse, AuthResponse } from '../types/auth.types'
+import type { RegisterDTO, RegisterResponse, VerifyEmailResponse, AuthResponse, ForgotPasswordDTO, ForgotPasswordResponse, ResetPasswordDTO, ResetPasswordResponse } from '../types/auth.types'
 import { generateToken } from '../utils/jwt'
 import { sendVerificationEmail } from '../utils/emails/confirmAccount'
+import { sendResetPasswordEmail } from '../utils/emails/resetPassword'
 
 export class AuthService {
   async register(data: RegisterDTO): Promise<RegisterResponse> {
@@ -94,5 +95,57 @@ export class AuthService {
       },
       token,
     }
+  }
+
+  async forgotPassword({ email } : ForgotPasswordDTO): Promise<ForgotPasswordResponse> {
+    const user = await prisma.user.findUnique({
+      where: { email },
+    })
+
+    if (!user) {
+      return { message: 'RESET_PASSWORD_EMAIL_SENT' }
+    }
+
+    const resetPasswordToken = crypto.randomUUID()
+    const resetPasswordExpires = new Date(Date.now() + 60 * 60 * 1000)
+
+    await prisma.user.update({
+      where: { email },
+      data: {
+        resetPasswordToken,
+        resetPasswordExpires,
+      },
+    })
+
+    await sendResetPasswordEmail({ email: user.email, name: user.name, lastName: user.lastName, token: resetPasswordToken })
+
+    return { message: 'RESET_PASSWORD_EMAIL_SENT' }
+  }
+
+  async resetPassword({ token, password }: ResetPasswordDTO): Promise<ResetPasswordResponse> {
+    const user = await prisma.user.findUnique({
+      where: { resetPasswordToken: token },
+    })
+    
+    if (!user) {
+      throw new Error('TOKEN_INVALID')
+    }
+
+    if (user.resetPasswordExpires && user.resetPasswordExpires < new Date()) {
+      throw new Error('TOKEN_EXPIRED')
+    }
+
+    const passwordHash = await bcrypt.hash(password, 10)
+
+    await prisma.user.update({
+      where: { id: user.id },
+      data: {
+        passwordHash,
+        resetPasswordToken: null,
+        resetPasswordExpires: null,
+      },
+    })
+
+    return { message: 'PASSWORD_RESET_SUCCESSFULLY' }
   }
 }

@@ -1,0 +1,182 @@
+{
+  "info": {
+    "_postman_id": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+    "name": "FormCustom - Auth",
+    "description": "Endpoints de autenticacion: registro, login, verificacion de email, recuperacion de password y Google OAuth.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://localhost:3000/api/auth",
+      "type": "string"
+    },
+    {
+      "key": "token",
+      "value": "",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "_postman_id": "item-001-register",
+      "name": "Register",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"email\": \"test@example.com\",\n  \"name\": \"Juan\",\n  \"lastName\": \"Perez\",\n  \"password\": \"Password123\"\n}"
+        },
+        "url": {
+          "raw": "{{base_url}}/register",
+          "host": ["{{base_url}}"],
+          "path": ["register"]
+        },
+        "description": "Registrar un nuevo usuario. Envía un email de verificación."
+      },
+      "response": []
+    },
+    {
+      "_postman_id": "item-002-verify-email",
+      "name": "Verify Email",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"token\": \"PEGA_AQUI_EL_TOKEN_DEL_EMAIL\"\n}"
+        },
+        "url": {
+          "raw": "{{base_url}}/verify-email",
+          "host": ["{{base_url}}"],
+          "path": ["verify-email"]
+        },
+        "description": "Verificar email con el token recibido por correo."
+      },
+      "response": []
+    },
+    {
+      "_postman_id": "item-003-login",
+      "name": "Login",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "var jsonData = pm.response.json();",
+              "if (jsonData.token) {",
+              "    pm.collectionVariables.set('token', jsonData.token);",
+              "    console.log('Token guardado:', jsonData.token);",
+              "}"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"email\": \"test@example.com\",\n  \"password\": \"Password123\"\n}"
+        },
+        "url": {
+          "raw": "{{base_url}}/login",
+          "host": ["{{base_url}}"],
+          "path": ["login"]
+        },
+        "description": "Login con email y password. Guarda el token automáticamente en la variable de colección."
+      },
+      "response": []
+    },
+    {
+      "_postman_id": "item-004-get-me",
+      "name": "Get Me",
+      "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{token}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{base_url}}/me",
+          "host": ["{{base_url}}"],
+          "path": ["me"]
+        },
+        "description": "Obtener datos del usuario autenticado. Requiere token JWT."
+      },
+      "response": []
+    },
+    {
+      "_postman_id": "item-005-forgot-password",
+      "name": "Forgot Password",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"email\": \"test@example.com\"\n}"
+        },
+        "url": {
+          "raw": "{{base_url}}/forgot-password",
+          "host": ["{{base_url}}"],
+          "path": ["forgot-password"]
+        },
+        "description": "Solicitar recupero de contraseña. Envía un email con un token de reset."
+      },
+      "response": []
+    },
+    {
+      "_postman_id": "item-006-reset-password",
+      "name": "Reset Password",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"token\": \"PEGA_AQUI_EL_TOKEN_DEL_EMAIL\",\n  \"password\": \"NewPassword123\"\n}"
+        },
+        "url": {
+          "raw": "{{base_url}}/reset-password",
+          "host": ["{{base_url}}"],
+          "path": ["reset-password"]
+        },
+        "description": "Resetear contraseña con el token recibido por email."
+      },
+      "response": []
+    }
+  ]
+}

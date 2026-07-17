@@ -3,6 +3,8 @@ import { AuthService } from "../services/auth.services";
 import {
   registerSchema,
   loginSchema,
+  forgotPasswordSchema,
+  resetPasswordSchema,
 } from "../utils/validators/auth.validator";
 import prisma from "../config/database";
 import type { UserResponse } from "../types/auth.types";
@@ -65,7 +67,7 @@ export class AuthController {
 
       if (!result.success) {
         return res.status(400).json({
-          error: "IVALID_DATA",
+          error: "INVALID_DATA",
           details: result.error.issues,
         });
       }
@@ -82,6 +84,52 @@ export class AuthController {
           error.message === "EMAIL_NOT_VERIFIED"
         ) {
           return res.status(401).json({ error: error.message });
+        }
+      }
+
+      res.status(500).json({ error: "INTERNAL_SERVER_ERROR" });
+    }
+  }
+
+  async forgotPassword(req: Request, res: Response) {
+    try {
+      const result = forgotPasswordSchema.safeParse(req.body);
+
+      if (!result.success) {
+        return res.status(400).json({
+          error: "INVALID_DATA",
+          details: result.error.issues,
+        });
+      }
+      
+      const data = await authService.forgotPassword(result.data);
+      res.json(data);
+    } catch (error) {
+      res.status(500).json({ error: "INTERNAL_SERVER_ERROR" });
+    }
+  }
+
+  async resetPassword(req: Request, res: Response) {
+    try {
+
+      const result = resetPasswordSchema.safeParse(req.body);
+
+      if (!result.success) {
+        return res.status(400).json({
+          error: "INVALID_DATA",
+          details: result.error.issues,
+        });
+      }
+
+      const data = await authService.resetPassword({ token: result.data.token, password: result.data.password });
+      res.json(data);
+    } catch (error) {
+      if (error instanceof Error) {
+        if (error.message === "TOKEN_INVALID") {
+          return res.status(400).json({ error: error.message });
+        }
+        if (error.message === "TOKEN_EXPIRED") {
+          return res.status(410).json({ error: error.message });
         }
       }
 

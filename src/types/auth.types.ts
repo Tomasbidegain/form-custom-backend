@@ -15,6 +15,29 @@ export interface VerifyEmailDTO {
   token: string
 }
 
+export interface ForgotPasswordDTO {
+  email: string
+}
+
+export interface ResetPasswordDTO {
+  token: string
+  password: string
+}
+
+export interface SendVerificationEmailDTO {
+  email: string
+  name: string
+  lastName: string
+  token: string
+}
+
+export interface SendResetPasswordEmailDTO {
+  email: string
+  name: string
+  lastName: string
+  token: string
+}
+
 // DTOs de salida (lo que devuelve el backend)
 export interface UserResponse {
   id: string
@@ -42,4 +65,11 @@ export interface VerifyEmailResponse {
 export interface ErrorResponse {
   error: string
   details?: unknown
+}
+
+export interface ForgotPasswordResponse {
+  message: string
+}
+export interface ResetPasswordResponse {
+  message: string
 }

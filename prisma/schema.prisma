@@ -23,6 +23,8 @@ model User {
   isVerified          Boolean   @default(false)
   verificationToken   String?   @unique
   verificationExpires DateTime?
+  resetPasswordToken  String?   @unique
+  resetPasswordExpires DateTime?
 
   forms     Form[]
   responses FormResponse[]

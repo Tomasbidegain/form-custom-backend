@@ -1,5 +1,5 @@
 import { z } from 'zod'
-import type { RegisterDTO, LoginDTO } from '../../types/auth.types'
+import type { RegisterDTO, LoginDTO, ForgotPasswordDTO, ResetPasswordDTO } from '../../types/auth.types'
 
 export const registerSchema = z.object({
   email: z.string().email('Email inválido'),
@@ -16,3 +16,16 @@ export const loginSchema = z.object({
   email: z.string().email('Email inválido'),
   password: z.string().min(1, 'La contraseña es requerida'),
 }) satisfies z.ZodType<LoginDTO>
+
+export const forgotPasswordSchema = z.object({
+  email: z.string().email('Email inválido')
+}) satisfies z.ZodType<ForgotPasswordDTO>
+
+export const resetPasswordSchema = z.object({
+  token: z.string().uuid('Token inválido'),
+  password: z.string()
+    .min(8, 'La contraseña debe tener al menos 8 caracteres')
+    .regex(/[A-Z]/, 'Debe contener al menos una mayúscula')
+    .regex(/[a-z]/, 'Debe contener al menos una minúscula')
+    .regex(/\d/, 'Debe contener al menos un número')
+}) satisfies z.ZodType<ResetPasswordDTO>
