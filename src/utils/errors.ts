@@ -247,6 +247,12 @@ export const ERRORS = {
     code: "CAPTCHA_INVALID",
     message: "Captcha verification failed",
   },
+
+  // Rate Limiting
+  RATE_LIMIT_EXCEEDED: {
+    code: "RATE_LIMIT_EXCEEDED",
+    message: "Too many requests, please try again later",
+  },
 } as const
 
 export type ErrorCode = keyof typeof ERRORS

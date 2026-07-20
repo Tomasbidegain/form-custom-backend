@@ -2,6 +2,7 @@ import { Router } from "express";
 import { FormController } from "../controllers/form.controller";
 import { FormResponseController } from "../controllers/form-response.controller";
 import { authMiddleware } from "../middlewares/auth.middleware";
+import { responseRateLimiter } from "../middlewares/rate-limit";
 
 const router = Router();
 const formController = new FormController();
@@ -35,8 +36,8 @@ router.delete("/:formId/fields/:fieldId", authMiddleware, (req, res) =>
   formController.removeField(req, res),
 );
 
-// Responses (público - sin auth)
-router.post("/:formId/responses", (req, res) =>
+// Responses (público - sin auth, con rate limiting)
+router.post("/:formId/responses", responseRateLimiter, (req, res) =>
   formResponseController.submitResponse(req, res),
 );
 
