@@ -45,6 +45,9 @@ router.post("/:formId/responses", responseRateLimiter, (req, res) =>
 router.get("/:formId/responses", authMiddleware, (req, res) =>
   formResponseController.getResponsesByForm(req, res),
 );
+router.get("/:formId/responses/export", authMiddleware, (req, res) =>
+  formResponseController.exportResponses(req, res),
+);
 router.get("/:formId/responses/:responseId", authMiddleware, (req, res) =>
   formResponseController.getResponseById(req, res),
 );

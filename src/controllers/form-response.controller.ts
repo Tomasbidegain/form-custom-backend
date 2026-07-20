@@ -142,4 +142,29 @@ export class FormResponseController {
       res.status(500).json(ERRORS.INTERNAL_SERVER_ERROR);
     }
   }
+
+  async exportResponses(req: Request, res: Response) {
+    try {
+      const userId = req.userId;
+      const formId = req.params.formId as string;
+
+      if (!userId) {
+        return res.status(401).json(ERRORS.UNAUTHORIZED);
+      }
+
+      const csv = await formResponseService.exportResponses(userId, formId);
+
+      res.setHeader("Content-Type", "text/csv");
+      res.setHeader(
+        "Content-Disposition",
+        `attachment; filename=form-${formId}-responses.csv`,
+      );
+      res.send(csv);
+    } catch (error) {
+      if (error instanceof Error && error.message === ERRORS.FORM_NOT_FOUND.code) {
+        return res.status(404).json(ERRORS.FORM_NOT_FOUND);
+      }
+      res.status(500).json(ERRORS.INTERNAL_SERVER_ERROR);
+    }
+  }
 }

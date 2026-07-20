@@ -8,6 +8,7 @@ import { ERRORS } from "../utils/errors";
 import { AppBusinessError } from "../utils/custom-error";
 import { validateFieldValue } from "../utils/validators/field-validator";
 import { verifyTurnstileToken } from "../utils/captcha";
+import { stringify } from "csv-stringify/sync";
 
 export class FormResponseService {
   async submitResponse(
@@ -305,5 +306,77 @@ export class FormResponseService {
         },
       });
     });
+  }
+
+  async exportResponses(
+    userId: string,
+    formId: string,
+  ): Promise<string> {
+    // Verificar ownership del form
+    const form = await prisma.form.findUnique({
+      where: { id: formId, userId },
+      include: {
+        fields: {
+          orderBy: { createdAt: "asc" },
+        },
+      },
+    });
+
+    if (!form) {
+      throw new Error(ERRORS.FORM_NOT_FOUND.code);
+    }
+
+    // Obtener todas las respuestas con sus field responses
+    const responses = await prisma.formResponse.findMany({
+      where: { formId },
+      include: {
+        fieldResponses: {
+          include: {
+            field: true,
+          },
+          orderBy: {
+            field: {
+              createdAt: "asc",
+            },
+          },
+        },
+      },
+      orderBy: {
+        submittedAt: "asc",
+      },
+    });
+
+    // Construir headers: metadatos + labels de los fields
+    const headers = [
+      "Response ID",
+      "Email",
+      "IP Address",
+      "Submitted At",
+      ...form.fields.map((f) => f.label),
+    ];
+
+    // Construir filas
+    const rows = responses.map((response) => {
+      const fieldMap = new Map(
+        response.fieldResponses.map((fr) => [fr.fieldId, fr.value]),
+      );
+
+      return [
+        response.id,
+        response.email || "",
+        response.ipAddress || "",
+        response.submittedAt.toISOString(),
+        ...form.fields.map((field) => fieldMap.get(field.id) || ""),
+      ];
+    });
+
+    // Generar CSV
+    const csv = stringify([headers, ...rows], {
+      header: false,
+      quoted: true,
+      quoted_empty: true,
+    });
+
+    return csv;
   }
 }

@@ -382,6 +382,9 @@ importers:
       bcrypt:
         specifier: ^6.0.0
         version: 6.0.0
+      csv-stringify:
+        specifier: ^6.8.1
+        version: 6.8.1
       dotenv:
         specifier: ^17.4.2
         version: 17.4.2
@@ -390,7 +393,7 @@ importers:
         version: 5.2.1(supports-color@5.5.0)
       express-rate-limit:
         specifier: ^8.6.0
-        version: 8.6.0(express@5.2.1(supports-color@5.5.0))
+        version: 8.6.0(express@5.2.1(supports-color@5.5.0))(supports-color@5.5.0)
       express-session:
         specifier: ^1.19.0
         version: 1.19.0
@@ -1067,6 +1070,9 @@ packages:
 
   csstype@3.2.3:
     resolution: {integrity: sha512-z1HGKcYy2xA8AGQfwrn0PAy+PB7X/GSj3UVJW9qKyn43xWa+gl5nXmU4qqLMRzWVLFC8KusUX8T/0kCiOYpAIQ==}
+
+  csv-stringify@6.8.1:
+    resolution: {integrity: sha512-tZ6X6TKQyQgCo5OptXcyAbfN1pwmoxEqELPQ7KFazNErx7kiVsDK8o+VYRXhfMl4N9vvOOLXuioquR2MeP847A==}
 
   debug@2.6.9:
     resolution: {integrity: sha512-bC7ElrdJaJnPbAP+1EotYvqZsb3ecl5wi6Bfi6BJTUcNowp6cvspg0jXznRTKDjm/E7AdgFBVeAPVMNcKGsHMA==}
@@ -2331,6 +2337,8 @@ snapshots:
 
   csstype@3.2.3: {}
 
+  csv-stringify@6.8.1: {}
+
   debug@2.6.9:
     dependencies:
       ms: 2.0.0
@@ -2430,7 +2438,7 @@ snapshots:
 
   etag@1.8.1: {}
 
-  express-rate-limit@8.6.0(express@5.2.1(supports-color@5.5.0)):
+  express-rate-limit@8.6.0(express@5.2.1(supports-color@5.5.0))(supports-color@5.5.0):
     dependencies:
       debug: 4.4.3(supports-color@5.5.0)
       express: 5.2.1(supports-color@5.5.0)
