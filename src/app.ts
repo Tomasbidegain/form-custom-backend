@@ -4,6 +4,7 @@ import passport from 'passport'
 import './config/passport'
 
 import authRoutes from './routes/auth.routes'
+import formRoutes from './routes/form.routes'
 
 const app = express()
 
@@ -24,7 +25,6 @@ app.use(express.json()) // Parsea JSON en el body de las peticiones
 app.use(express.urlencoded({ extended: true })) // Parsea formularios
 
 app.use('/api/auth', authRoutes)
-
-// app.use('/api/forms', formRoutes)
+app.use('/api/forms', formRoutes)
 
 export default app

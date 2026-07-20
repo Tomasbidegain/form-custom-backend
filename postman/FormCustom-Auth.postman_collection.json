@@ -1,182 +1,592 @@
 {
   "info": {
     "_postman_id": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
-    "name": "FormCustom - Auth",
-    "description": "Endpoints de autenticacion: registro, login, verificacion de email, recuperacion de password y Google OAuth.",
+    "name": "FormCustom API",
+    "description": "API endpoints for FormCustom: authentication, form management, and responses.",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "variable": [
     {
       "key": "base_url",
-      "value": "http://localhost:3000/api/auth",
+      "value": "http://localhost:3000/api",
       "type": "string"
     },
     {
       "key": "token",
       "value": "",
       "type": "string"
+    },
+    {
+      "key": "form_id",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "field_id",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "response_id",
+      "value": "",
+      "type": "string"
     }
   ],
   "item": [
     {
-      "_postman_id": "item-001-register",
-      "name": "Register",
-      "request": {
-        "method": "POST",
-        "header": [
-          {
-            "key": "Content-Type",
-            "value": "application/json"
-          }
-        ],
-        "body": {
-          "mode": "raw",
-          "raw": "{\n  \"email\": \"test@example.com\",\n  \"name\": \"Juan\",\n  \"lastName\": \"Perez\",\n  \"password\": \"Password123\"\n}"
-        },
-        "url": {
-          "raw": "{{base_url}}/register",
-          "host": ["{{base_url}}"],
-          "path": ["register"]
-        },
-        "description": "Registrar un nuevo usuario. Envía un email de verificación."
-      },
-      "response": []
-    },
-    {
-      "_postman_id": "item-002-verify-email",
-      "name": "Verify Email",
-      "request": {
-        "method": "POST",
-        "header": [
-          {
-            "key": "Content-Type",
-            "value": "application/json"
-          }
-        ],
-        "body": {
-          "mode": "raw",
-          "raw": "{\n  \"token\": \"PEGA_AQUI_EL_TOKEN_DEL_EMAIL\"\n}"
-        },
-        "url": {
-          "raw": "{{base_url}}/verify-email",
-          "host": ["{{base_url}}"],
-          "path": ["verify-email"]
-        },
-        "description": "Verificar email con el token recibido por correo."
-      },
-      "response": []
-    },
-    {
-      "_postman_id": "item-003-login",
-      "name": "Login",
-      "event": [
+      "_postman_id": "folder-auth",
+      "name": "Auth",
+      "description": "Authentication endpoints: register, login, email verification, password recovery.",
+      "item": [
         {
-          "listen": "test",
-          "script": {
-            "type": "text/javascript",
-            "exec": [
-              "var jsonData = pm.response.json();",
-              "if (jsonData.token) {",
-              "    pm.collectionVariables.set('token', jsonData.token);",
-              "    console.log('Token guardado:', jsonData.token);",
-              "}"
-            ]
-          }
-        }
-      ],
-      "request": {
-        "method": "POST",
-        "header": [
-          {
-            "key": "Content-Type",
-            "value": "application/json"
-          }
-        ],
-        "body": {
-          "mode": "raw",
-          "raw": "{\n  \"email\": \"test@example.com\",\n  \"password\": \"Password123\"\n}"
+          "_postman_id": "auth-register",
+          "name": "Register",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"test@example.com\",\n  \"name\": \"Juan\",\n  \"lastName\": \"Perez\",\n  \"password\": \"Password123\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/auth/register",
+              "host": ["{{base_url}}"],
+              "path": ["auth", "register"]
+            },
+            "description": "Register a new user. Sends a verification email."
+          },
+          "response": []
         },
-        "url": {
-          "raw": "{{base_url}}/login",
-          "host": ["{{base_url}}"],
-          "path": ["login"]
+        {
+          "_postman_id": "auth-verify-email",
+          "name": "Verify Email",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"token\": \"PEGA_AQUI_EL_TOKEN_DEL_EMAIL\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/auth/verify-email",
+              "host": ["{{base_url}}"],
+              "path": ["auth", "verify-email"]
+            },
+            "description": "Verify email with the token received by email."
+          },
+          "response": []
         },
-        "description": "Login con email y password. Guarda el token automáticamente en la variable de colección."
-      },
-      "response": []
-    },
-    {
-      "_postman_id": "item-004-get-me",
-      "name": "Get Me",
-      "request": {
-        "auth": {
-          "type": "bearer",
-          "bearer": [
+        {
+          "_postman_id": "auth-login",
+          "name": "Login",
+          "event": [
             {
-              "key": "token",
-              "value": "{{token}}",
-              "type": "string"
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "var jsonData = pm.response.json();",
+                  "if (jsonData.token) {",
+                  "    pm.collectionVariables.set('token', jsonData.token);",
+                  "    console.log('Token saved:', jsonData.token);",
+                  "}"
+                ]
+              }
             }
-          ]
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"test@example.com\",\n  \"password\": \"Password123\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/auth/login",
+              "host": ["{{base_url}}"],
+              "path": ["auth", "login"]
+            },
+            "description": "Login with email and password. Saves the token automatically to the collection variable."
+          },
+          "response": []
         },
-        "method": "GET",
-        "header": [],
-        "url": {
-          "raw": "{{base_url}}/me",
-          "host": ["{{base_url}}"],
-          "path": ["me"]
+        {
+          "_postman_id": "auth-get-me",
+          "name": "Get Me",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/auth/me",
+              "host": ["{{base_url}}"],
+              "path": ["auth", "me"]
+            },
+            "description": "Get authenticated user data. Requires JWT token."
+          },
+          "response": []
         },
-        "description": "Obtener datos del usuario autenticado. Requiere token JWT."
-      },
-      "response": []
+        {
+          "_postman_id": "auth-forgot-password",
+          "name": "Forgot Password",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"test@example.com\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/auth/forgot-password",
+              "host": ["{{base_url}}"],
+              "path": ["auth", "forgot-password"]
+            },
+            "description": "Request password recovery. Sends an email with a reset token."
+          },
+          "response": []
+        },
+        {
+          "_postman_id": "auth-reset-password",
+          "name": "Reset Password",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"token\": \"PEGA_AQUI_EL_TOKEN_DEL_EMAIL\",\n  \"password\": \"NewPassword123\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/auth/reset-password",
+              "host": ["{{base_url}}"],
+              "path": ["auth", "reset-password"]
+            },
+            "description": "Reset password with the token received by email."
+          },
+          "response": []
+        }
+      ]
     },
     {
-      "_postman_id": "item-005-forgot-password",
-      "name": "Forgot Password",
-      "request": {
-        "method": "POST",
-        "header": [
-          {
-            "key": "Content-Type",
-            "value": "application/json"
-          }
-        ],
-        "body": {
-          "mode": "raw",
-          "raw": "{\n  \"email\": \"test@example.com\"\n}"
+      "_postman_id": "folder-forms",
+      "name": "Forms",
+      "description": "Form management endpoints: CRUD for forms and fields. All endpoints require authentication.",
+      "item": [
+        {
+          "_postman_id": "form-create",
+          "name": "Create Form",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"My Form\",\n  \"description\": \"A test form\",\n  \"oneResponsePerEmail\": false,\n  \"captchaEnabled\": true,\n  \"fields\": [\n    {\n      \"label\": \"Full Name\",\n      \"type\": \"TEXT\",\n      \"required\": true,\n      \"gridX\": 0,\n      \"gridY\": 0,\n      \"gridW\": 12,\n      \"gridH\": 1\n    },\n    {\n      \"label\": \"Email\",\n      \"type\": \"EMAIL\",\n      \"required\": true,\n      \"gridX\": 0,\n      \"gridY\": 1,\n      \"gridW\": 6,\n      \"gridH\": 1\n    },\n    {\n      \"label\": \"Favorite Color\",\n      \"type\": \"SELECT\",\n      \"required\": false,\n      \"options\": [\"Red\", \"Blue\", \"Green\"],\n      \"gridX\": 6,\n      \"gridY\": 1,\n      \"gridW\": 6,\n      \"gridH\": 1\n    }\n  ]\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/forms",
+              "host": ["{{base_url}}"],
+              "path": ["forms"]
+            },
+            "description": "Create a new form with fields. Requires authentication."
+          },
+          "response": []
         },
-        "url": {
-          "raw": "{{base_url}}/forgot-password",
-          "host": ["{{base_url}}"],
-          "path": ["forgot-password"]
+        {
+          "_postman_id": "form-list",
+          "name": "List Forms",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/forms?page=1&limit=10&search=&sortBy=createdAt&sortOrder=desc",
+              "host": ["{{base_url}}"],
+              "path": ["forms"],
+              "query": [
+                { "key": "page", "value": "1" },
+                { "key": "limit", "value": "10" },
+                { "key": "search", "value": "" },
+                { "key": "sortBy", "value": "createdAt" },
+                { "key": "sortOrder", "value": "desc" }
+              ]
+            },
+            "description": "List all forms of the authenticated user with pagination, search, and sorting."
+          },
+          "response": []
         },
-        "description": "Solicitar recupero de contraseña. Envía un email con un token de reset."
-      },
-      "response": []
+        {
+          "_postman_id": "form-get-by-id",
+          "name": "Get Form by ID",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/forms/{{form_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["forms", "{{form_id}}"]
+            },
+            "description": "Get a specific form with its fields. Requires ownership."
+          },
+          "response": []
+        },
+        {
+          "_postman_id": "form-update",
+          "name": "Update Form",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Updated Form Title\",\n  \"description\": \"Updated description\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/forms/{{form_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["forms", "{{form_id}}"]
+            },
+            "description": "Update form data. Only send the fields you want to update."
+          },
+          "response": []
+        },
+        {
+          "_postman_id": "form-delete",
+          "name": "Delete Form",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/forms/{{form_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["forms", "{{form_id}}"]
+            },
+            "description": "Delete a form and all its fields/responses. Returns 204 No Content."
+          },
+          "response": []
+        },
+        {
+          "_postman_id": "form-publish",
+          "name": "Toggle Publish",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "PATCH",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/forms/{{form_id}}/publish",
+              "host": ["{{base_url}}"],
+              "path": ["forms", "{{form_id}}", "publish"]
+            },
+            "description": "Toggle form published status. Validates expiration date when publishing."
+          },
+          "response": []
+        },
+        {
+          "_postman_id": "field-add",
+          "name": "Add Field",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"label\": \"Phone Number\",\n  \"type\": \"TEXT\",\n  \"required\": false,\n  \"gridX\": 0,\n  \"gridY\": 2,\n  \"gridW\": 6,\n  \"gridH\": 1\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/forms/{{form_id}}/fields",
+              "host": ["{{base_url}}"],
+              "path": ["forms", "{{form_id}}", "fields"]
+            },
+            "description": "Add a new field to an existing form."
+          },
+          "response": []
+        },
+        {
+          "_postman_id": "field-update",
+          "name": "Update Field",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"label\": \"Updated Label\",\n  \"required\": true\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/forms/{{form_id}}/fields/{{field_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["forms", "{{form_id}}", "fields", "{{field_id}}"]
+            },
+            "description": "Update a specific field. Only send the fields you want to update."
+          },
+          "response": []
+        },
+        {
+          "_postman_id": "field-delete",
+          "name": "Delete Field",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/forms/{{form_id}}/fields/{{field_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["forms", "{{form_id}}", "fields", "{{field_id}}"]
+            },
+            "description": "Delete a specific field from a form. Returns 204 No Content."
+          },
+          "response": []
+        }
+      ]
     },
     {
-      "_postman_id": "item-006-reset-password",
-      "name": "Reset Password",
-      "request": {
-        "method": "POST",
-        "header": [
-          {
-            "key": "Content-Type",
-            "value": "application/json"
-          }
-        ],
-        "body": {
-          "mode": "raw",
-          "raw": "{\n  \"token\": \"PEGA_AQUI_EL_TOKEN_DEL_EMAIL\",\n  \"password\": \"NewPassword123\"\n}"
+      "_postman_id": "folder-responses",
+      "name": "Responses",
+      "description": "Form response endpoints: submit (public), list, get by ID, delete.",
+      "item": [
+        {
+          "_postman_id": "response-submit",
+          "name": "Submit Response",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"user@example.com\",\n  \"fields\": [\n    { \"fieldId\": \"{{field_id}}\", \"value\": \"John Doe\" },\n    { \"fieldId\": \"{{field_id_2}}\", \"value\": \"john@example.com\" }\n  ]\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/forms/{{form_id}}/responses",
+              "host": ["{{base_url}}"],
+              "path": ["forms", "{{form_id}}", "responses"]
+            },
+            "description": "Submit a form response. Public endpoint (no auth required)."
+          },
+          "response": []
         },
-        "url": {
-          "raw": "{{base_url}}/reset-password",
-          "host": ["{{base_url}}"],
-          "path": ["reset-password"]
+        {
+          "_postman_id": "response-list",
+          "name": "List Responses",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/forms/{{form_id}}/responses?page=1&limit=10&search=&sortBy=submittedAt&sortOrder=desc",
+              "host": ["{{base_url}}"],
+              "path": ["forms", "{{form_id}}", "responses"],
+              "query": [
+                { "key": "page", "value": "1" },
+                { "key": "limit", "value": "10" },
+                { "key": "search", "value": "" },
+                { "key": "sortBy", "value": "submittedAt" },
+                { "key": "sortOrder", "value": "desc" }
+              ]
+            },
+            "description": "List all responses for a form with pagination, search, and sorting. Requires ownership."
+          },
+          "response": []
         },
-        "description": "Resetear contraseña con el token recibido por email."
-      },
-      "response": []
+        {
+          "_postman_id": "response-get-by-id",
+          "name": "Get Response by ID",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/forms/{{form_id}}/responses/{{response_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["forms", "{{form_id}}", "responses", "{{response_id}}"]
+            },
+            "description": "Get a specific response with all field values. Requires ownership."
+          },
+          "response": []
+        },
+        {
+          "_postman_id": "response-delete",
+          "name": "Delete Response",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/forms/{{form_id}}/responses/{{response_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["forms", "{{form_id}}", "responses", "{{response_id}}"]
+            },
+            "description": "Delete a specific response. Decrements form response count. Returns 204 No Content."
+          },
+          "response": []
+        }
+      ]
     }
   ]
 }

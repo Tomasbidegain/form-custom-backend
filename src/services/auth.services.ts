@@ -5,6 +5,7 @@ import type { RegisterDTO, RegisterResponse, VerifyEmailResponse, AuthResponse, 
 import { generateToken } from '../utils/jwt'
 import { sendVerificationEmail } from '../utils/emails/confirmAccount'
 import { sendResetPasswordEmail } from '../utils/emails/resetPassword'
+import { ERRORS } from '../utils/errors'
 
 export class AuthService {
   async register(data: RegisterDTO): Promise<RegisterResponse> {
@@ -13,7 +14,7 @@ export class AuthService {
     })
 
     if (userExists) {
-      throw new Error('EMAIL_ALREADY_REGISTERED')
+      throw new Error(ERRORS.EMAIL_ALREADY_REGISTERED.code)
     }
 
     const passwordHash = await bcrypt.hash(data.password, 10)
@@ -46,11 +47,11 @@ export class AuthService {
     })
 
     if (!user) {
-      throw new Error('TOKEN_INVALID')
+      throw new Error(ERRORS.TOKEN_INVALID.code)
     }
 
     if (user.verificationExpires && user.verificationExpires < new Date()) {
-      throw new Error('TOKEN_EXPIRED')
+      throw new Error(ERRORS.TOKEN_EXPIRED.code)
     }
 
     await prisma.user.update({
@@ -71,17 +72,17 @@ export class AuthService {
     })
 
     if (!user) {
-      throw new Error('INVALID_CREDENTIALS')
+      throw new Error(ERRORS.INVALID_CREDENTIALS.code)
     }
 
     if (!user.isVerified) {
-      throw new Error('EMAIL_NOT_VERIFIED')
+      throw new Error(ERRORS.EMAIL_NOT_VERIFIED.code)
     }
 
     const isPasswordValid = await bcrypt.compare(password, user.passwordHash!)
 
     if (!isPasswordValid) {
-      throw new Error('INVALID_CREDENTIALS')
+      throw new Error(ERRORS.INVALID_CREDENTIALS.code)
     }
 
     const token = generateToken(user.id)
@@ -128,11 +129,11 @@ export class AuthService {
     })
     
     if (!user) {
-      throw new Error('TOKEN_INVALID')
+      throw new Error(ERRORS.TOKEN_INVALID.code)
     }
 
     if (user.resetPasswordExpires && user.resetPasswordExpires < new Date()) {
-      throw new Error('TOKEN_EXPIRED')
+      throw new Error(ERRORS.TOKEN_EXPIRED.code)
     }
 
     const passwordHash = await bcrypt.hash(password, 10)

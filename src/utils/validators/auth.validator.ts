@@ -2,30 +2,30 @@ import { z } from 'zod'
 import type { RegisterDTO, LoginDTO, ForgotPasswordDTO, ResetPasswordDTO } from '../../types/auth.types'
 
 export const registerSchema = z.object({
-  email: z.string().email('Email inválido'),
-  name: z.string().min(2, 'El nombre debe tener al menos 2 caracteres'),
-  lastName: z.string().min(2, 'El apellido debe tener al menos 2 caracteres'),
+  email: z.string().email('INVALID_EMAIL'),
+  name: z.string().min(2, 'NAME_TOO_SHORT'),
+  lastName: z.string().min(2, 'LAST_NAME_TOO_SHORT'),
   password: z.string()
-    .min(8, 'La contraseña debe tener al menos 8 caracteres')
-    .regex(/[A-Z]/, 'Debe contener al menos una mayúscula')
-    .regex(/[a-z]/, 'Debe contener al menos una minúscula')
-    .regex(/\d/, 'Debe contener al menos un número'),
+    .min(8, 'PASSWORD_TOO_SHORT')
+    .regex(/[A-Z]/, 'PASSWORD_NO_UPPERCASE')
+    .regex(/[a-z]/, 'PASSWORD_NO_LOWERCASE')
+    .regex(/\d/, 'PASSWORD_NO_NUMBER'),
 }) satisfies z.ZodType<RegisterDTO>
 
 export const loginSchema = z.object({
-  email: z.string().email('Email inválido'),
-  password: z.string().min(1, 'La contraseña es requerida'),
+  email: z.string().email('INVALID_EMAIL'),
+  password: z.string().min(1, 'PASSWORD_REQUIRED'),
 }) satisfies z.ZodType<LoginDTO>
 
 export const forgotPasswordSchema = z.object({
-  email: z.string().email('Email inválido')
+  email: z.string().email('INVALID_EMAIL')
 }) satisfies z.ZodType<ForgotPasswordDTO>
 
 export const resetPasswordSchema = z.object({
-  token: z.string().uuid('Token inválido'),
+  token: z.string().uuid('INVALID_TOKEN_FORMAT'),
   password: z.string()
-    .min(8, 'La contraseña debe tener al menos 8 caracteres')
-    .regex(/[A-Z]/, 'Debe contener al menos una mayúscula')
-    .regex(/[a-z]/, 'Debe contener al menos una minúscula')
-    .regex(/\d/, 'Debe contener al menos un número')
+    .min(8, 'PASSWORD_TOO_SHORT')
+    .regex(/[A-Z]/, 'PASSWORD_NO_UPPERCASE')
+    .regex(/[a-z]/, 'PASSWORD_NO_LOWERCASE')
+    .regex(/\d/, 'PASSWORD_NO_NUMBER')
 }) satisfies z.ZodType<ResetPasswordDTO>

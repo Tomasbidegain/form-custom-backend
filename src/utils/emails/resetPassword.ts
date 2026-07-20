@@ -12,7 +12,7 @@ export async function sendResetPasswordEmail({
   const resetPasswordUrl = `${process.env.FRONTEND_URL}/reset-password?token=${token}`;
 
   await resend.emails.send({
-    from: "onboarding@resend.dev",
+    from: "CustomForm@resend.dev",
     to: email,
     subject: "Restablece tu contraseña",
     html: `<!DOCTYPE html>
@@ -64,7 +64,7 @@ export async function sendResetPasswordEmail({
                                               <a href="${resetPasswordUrl}"
                                                 style="display:inline-block;
                                                         background:#2563eb;
-                                                        color:#ffffff;
+                                                        color:#custom-formf;
                                                         text-decoration:none;
                                                         padding:16px 32px;
                                                         border-radius:8px;
@@ -82,7 +82,7 @@ export async function sendResetPasswordEmail({
 
                                   <p style="word-break:break-all;font-size:14px;color:#2563eb;">
                                       ${resetPasswordUrl}
-                                  </p>
+                                  </custom-form>
 
                                   <hr style="border:none;border-top:1px solid #e5e7eb;margin:35px 0;">
 

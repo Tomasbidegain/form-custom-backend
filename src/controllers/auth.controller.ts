@@ -8,6 +8,7 @@ import {
 } from "../utils/validators/auth.validator";
 import prisma from "../config/database";
 import type { UserResponse } from "../types/auth.types";
+import { ERRORS } from "../utils/errors";
 
 const authService = new AuthService();
 
@@ -18,8 +19,12 @@ export class AuthController {
 
       if (!result.success) {
         return res.status(400).json({
-          error: "Datos inválidos",
-          details: result.error.issues,
+          code: ERRORS.INVALID_DATA.code,
+          message: ERRORS.INVALID_DATA.message,
+          details: result.error.issues.map((issue) => ({
+            field: issue.path.join(".") || "root",
+            code: issue.message,
+          })),
         });
       }
 
@@ -28,12 +33,12 @@ export class AuthController {
     } catch (error) {
       if (
         error instanceof Error &&
-        error.message === "EMAIL_ALREADY_REGISTERED"
+        error.message === ERRORS.EMAIL_ALREADY_REGISTERED.code
       ) {
-        return res.status(409).json({ error: error.message });
+        return res.status(409).json(ERRORS.EMAIL_ALREADY_REGISTERED);
       }
 
-      res.status(500).json({ error: "INTERNAL_SERVER_ERROR" });
+      res.status(500).json(ERRORS.INTERNAL_SERVER_ERROR);
     }
   }
 
@@ -42,22 +47,22 @@ export class AuthController {
       const { token } = req.body;
 
       if (!token) {
-        return res.status(400).json({ error: "TOKEN_REQUIRED" });
+        return res.status(400).json(ERRORS.TOKEN_REQUIRED);
       }
 
       const data = await authService.verifyEmail(token);
       res.json(data);
     } catch (error) {
       if (error instanceof Error) {
-        if (error.message === "TOKEN_INVALID") {
-          return res.status(400).json({ error: error.message });
+        if (error.message === ERRORS.TOKEN_INVALID.code) {
+          return res.status(400).json(ERRORS.TOKEN_INVALID);
         }
-        if (error.message === "TOKEN_EXPIRED") {
-          return res.status(410).json({ error: error.message });
+        if (error.message === ERRORS.TOKEN_EXPIRED.code) {
+          return res.status(410).json(ERRORS.TOKEN_EXPIRED);
         }
       }
 
-      res.status(500).json({ error: "INTERNAL_SERVER_ERROR" });
+      res.status(500).json(ERRORS.INTERNAL_SERVER_ERROR);
     }
   }
 
@@ -67,8 +72,12 @@ export class AuthController {
 
       if (!result.success) {
         return res.status(400).json({
-          error: "INVALID_DATA",
-          details: result.error.issues,
+          code: ERRORS.INVALID_DATA.code,
+          message: ERRORS.INVALID_DATA.message,
+          details: result.error.issues.map((issue) => ({
+            field: issue.path.join(".") || "root",
+            code: issue.message,
+          })),
         });
       }
 
@@ -79,15 +88,15 @@ export class AuthController {
       res.json(data);
     } catch (error) {
       if (error instanceof Error) {
-        if (
-          error.message === "INVALID_CREDENTIALS" ||
-          error.message === "EMAIL_NOT_VERIFIED"
-        ) {
-          return res.status(401).json({ error: error.message });
+        if (error.message === ERRORS.INVALID_CREDENTIALS.code) {
+          return res.status(401).json(ERRORS.INVALID_CREDENTIALS);
+        }
+        if (error.message === ERRORS.EMAIL_NOT_VERIFIED.code) {
+          return res.status(401).json(ERRORS.EMAIL_NOT_VERIFIED);
         }
       }
 
-      res.status(500).json({ error: "INTERNAL_SERVER_ERROR" });
+      res.status(500).json(ERRORS.INTERNAL_SERVER_ERROR);
     }
   }
 
@@ -97,43 +106,53 @@ export class AuthController {
 
       if (!result.success) {
         return res.status(400).json({
-          error: "INVALID_DATA",
-          details: result.error.issues,
+          code: ERRORS.INVALID_DATA.code,
+          message: ERRORS.INVALID_DATA.message,
+          details: result.error.issues.map((issue) => ({
+            field: issue.path.join(".") || "root",
+            code: issue.message,
+          })),
         });
       }
-      
+
       const data = await authService.forgotPassword(result.data);
       res.json(data);
     } catch (error) {
-      res.status(500).json({ error: "INTERNAL_SERVER_ERROR" });
+      res.status(500).json(ERRORS.INTERNAL_SERVER_ERROR);
     }
   }
 
   async resetPassword(req: Request, res: Response) {
     try {
-
       const result = resetPasswordSchema.safeParse(req.body);
 
       if (!result.success) {
         return res.status(400).json({
-          error: "INVALID_DATA",
-          details: result.error.issues,
+          code: ERRORS.INVALID_DATA.code,
+          message: ERRORS.INVALID_DATA.message,
+          details: result.error.issues.map((issue) => ({
+            field: issue.path.join(".") || "root",
+            code: issue.message,
+          })),
         });
       }
 
-      const data = await authService.resetPassword({ token: result.data.token, password: result.data.password });
+      const data = await authService.resetPassword({
+        token: result.data.token,
+        password: result.data.password,
+      });
       res.json(data);
     } catch (error) {
       if (error instanceof Error) {
-        if (error.message === "TOKEN_INVALID") {
-          return res.status(400).json({ error: error.message });
+        if (error.message === ERRORS.TOKEN_INVALID.code) {
+          return res.status(400).json(ERRORS.TOKEN_INVALID);
         }
-        if (error.message === "TOKEN_EXPIRED") {
-          return res.status(410).json({ error: error.message });
+        if (error.message === ERRORS.TOKEN_EXPIRED.code) {
+          return res.status(410).json(ERRORS.TOKEN_EXPIRED);
         }
       }
 
-      res.status(500).json({ error: "INTERNAL_SERVER_ERROR" });
+      res.status(500).json(ERRORS.INTERNAL_SERVER_ERROR);
     }
   }
 
@@ -151,7 +170,7 @@ export class AuthController {
       });
 
       if (!user) {
-        return res.status(404).json({ error: "USER_NOT_FOUND" });
+        return res.status(404).json(ERRORS.USER_NOT_FOUND);
       }
 
       const userResponse: UserResponse = {
@@ -164,7 +183,7 @@ export class AuthController {
 
       res.json(userResponse);
     } catch (error) {
-      res.status(500).json({ error: "INTERNAL_SERVER_ERROR" });
+      res.status(500).json(ERRORS.INTERNAL_SERVER_ERROR);
     }
   }
 }

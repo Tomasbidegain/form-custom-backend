@@ -41,7 +41,6 @@ model Form {
   expiresAt            DateTime?
   maxResponses         Int?
   currentResponseCount Int       @default(0)
-  requireEmail         Boolean   @default(false)
   oneResponsePerEmail  Boolean   @default(false)
   captchaEnabled       Boolean   @default(true)
 
@@ -74,7 +73,7 @@ model Field {
   label    String
   type     TypeField
   required Boolean   @default(false)
-  options  Json?
+  options  String[]  @default([]) 
   gridX    Int       @default(0) // Columna de inicio (0-11)
   gridY    Int       @default(0) // Fila de inicio
   gridW    Int       @default(12) // Ancho en columnas (1-12)
