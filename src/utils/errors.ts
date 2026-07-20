@@ -253,6 +253,12 @@ export const ERRORS = {
     code: "RATE_LIMIT_EXCEEDED",
     message: "Too many requests, please try again later",
   },
+
+  // Form ownership
+  FORM_OWNER_CANNOT_RESPOND: {
+    code: "FORM_OWNER_CANNOT_RESPOND",
+    message: "Form owners cannot submit responses to their own forms",
+  },
 } as const
 
 export type ErrorCode = keyof typeof ERRORS

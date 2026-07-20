@@ -12,6 +12,7 @@ export class FormResponseController {
     try {
       const formId = req.params.formId as string;
       const ipAddress = req.ip || null;
+      const userId = req.userId || null;
 
       const result = createResponseSchema.safeParse(req.body);
 
@@ -30,6 +31,7 @@ export class FormResponseController {
         formId,
         result.data,
         ipAddress,
+        userId,
       );
       res.status(201).json(response);
     } catch (error) {
@@ -50,6 +52,7 @@ export class FormResponseController {
           [ERRORS.EMAIL_ALREADY_RESPONDED.code]: 409,
           [ERRORS.CAPTCHA_REQUIRED.code]: 400,
           [ERRORS.CAPTCHA_INVALID.code]: 400,
+          [ERRORS.FORM_OWNER_CANNOT_RESPOND.code]: 403,
         };
         const status = errorMap[error.message];
         if (status) {

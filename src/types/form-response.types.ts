@@ -16,6 +16,10 @@ export interface FormResponseDTO {
     fieldId: string
     fieldLabel: string
     value: string
+    gridX: number
+    gridY: number
+    gridW: number
+    gridH: number
   }[]
 }
 
@@ -30,5 +34,9 @@ export interface MyResponseDTO {
     fieldId: string
     fieldLabel: string
     value: string
+    gridX: number
+    gridY: number
+    gridW: number
+    gridH: number
   }[]
 }

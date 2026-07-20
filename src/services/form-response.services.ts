@@ -16,6 +16,7 @@ export class FormResponseService {
     formId: string,
     data: CreateFormResponseDTO,
     ipAddress: string | null,
+    userId: string | null,
   ): Promise<FormResponseDTO> {
     const form = await prisma.form.findUnique({
       where: { id: formId },
@@ -24,6 +25,11 @@ export class FormResponseService {
 
     if (!form) {
       throw new Error(ERRORS.FORM_NOT_FOUND.code);
+    }
+
+    // Validar que el owner no responda su propio form
+    if (userId && userId === form.userId) {
+      throw new Error(ERRORS.FORM_OWNER_CANNOT_RESPOND.code);
     }
 
     if (!form.isPublished) {
@@ -131,6 +137,7 @@ export class FormResponseService {
           formId,
           email: data.email ?? null,
           ipAddress,
+          userId,
           fieldResponses: {
             create: data.fields.map((field) => ({
               fieldId: field.fieldId,
@@ -166,6 +173,10 @@ export class FormResponseService {
         fieldId: fr.fieldId,
         fieldLabel: fr.field.label,
         value: fr.value,
+        gridX: fr.field.gridX,
+        gridY: fr.field.gridY,
+        gridW: fr.field.gridW,
+        gridH: fr.field.gridH,
       })),
     };
   }
@@ -218,6 +229,10 @@ export class FormResponseService {
           fieldId: fr.fieldId,
           fieldLabel: fr.field.label,
           value: fr.value,
+          gridX: fr.field.gridX,
+          gridY: fr.field.gridY,
+          gridW: fr.field.gridW,
+          gridH: fr.field.gridH,
         })),
       })),
       pagination: {
@@ -266,6 +281,10 @@ export class FormResponseService {
         fieldId: fr.fieldId,
         fieldLabel: fr.field.label,
         value: fr.value,
+        gridX: fr.field.gridX,
+        gridY: fr.field.gridY,
+        gridW: fr.field.gridW,
+        gridH: fr.field.gridH,
       })),
     };
   }
@@ -363,6 +382,10 @@ export class FormResponseService {
           fieldId: fr.fieldId,
           fieldLabel: fr.field.label,
           value: fr.value,
+          gridX: fr.field.gridX,
+          gridY: fr.field.gridY,
+          gridW: fr.field.gridW,
+          gridH: fr.field.gridH,
         })),
       })),
       pagination: {
