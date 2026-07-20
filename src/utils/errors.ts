@@ -191,6 +191,62 @@ export const ERRORS = {
     code: "RESPONSE_NOT_FOUND",
     message: "Response not found",
   },
+
+  // Field Value Validation
+  INVALID_FIELD_VALUE: {
+    code: "INVALID_FIELD_VALUE",
+    message: "One or more field values are invalid",
+  },
+  FIELD_VALUE_REQUIRED: {
+    code: "FIELD_VALUE_REQUIRED",
+    message: "This field is required",
+  },
+  INVALID_NUMBER: {
+    code: "INVALID_NUMBER",
+    message: "The value must be a valid number",
+  },
+  INVALID_EMAIL_FORMAT: {
+    code: "INVALID_EMAIL_FORMAT",
+    message: "The value must be a valid email address",
+  },
+  INVALID_DATE: {
+    code: "INVALID_DATE",
+    message: "The value must be a valid date (YYYY-MM-DD)",
+  },
+  INVALID_TIME: {
+    code: "INVALID_TIME",
+    message: "The value must be a valid time (HH:MM)",
+  },
+  INVALID_DATETIME: {
+    code: "INVALID_DATETIME",
+    message: "The value must be a valid datetime",
+  },
+  INVALID_OPTION: {
+    code: "INVALID_OPTION",
+    message: "The value is not a valid option",
+  },
+  INVALID_CHECKBOX: {
+    code: "INVALID_CHECKBOX",
+    message: "The value must be 'true' or 'false'",
+  },
+  INVALID_MULTISELECT: {
+    code: "INVALID_MULTISELECT",
+    message: "The value must be a valid JSON array",
+  },
+  INVALID_FILE_URL: {
+    code: "INVALID_FILE_URL",
+    message: "The value must be a valid file URL",
+  },
+
+  // Captcha
+  CAPTCHA_REQUIRED: {
+    code: "CAPTCHA_REQUIRED",
+    message: "Captcha verification is required",
+  },
+  CAPTCHA_INVALID: {
+    code: "CAPTCHA_INVALID",
+    message: "Captcha verification failed",
+  },
 } as const
 
 export type ErrorCode = keyof typeof ERRORS

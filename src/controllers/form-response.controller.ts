@@ -48,6 +48,8 @@ export class FormResponseController {
           [ERRORS.FORM_EXPIRED.code]: 400,
           [ERRORS.FORM_MAX_RESPONSES_REACHED.code]: 400,
           [ERRORS.EMAIL_ALREADY_RESPONDED.code]: 409,
+          [ERRORS.CAPTCHA_REQUIRED.code]: 400,
+          [ERRORS.CAPTCHA_INVALID.code]: 400,
         };
         const status = errorMap[error.message];
         if (status) {

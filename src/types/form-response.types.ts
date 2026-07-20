@@ -1,9 +1,10 @@
 export interface CreateFormResponseDTO {
-  email?: string
+  email?: string;
+  turnstileToken?: string;
   fields: {
-    fieldId: string
-    value: string
-  }[]
+    fieldId: string;
+    value: string;
+  }[];
 }
 
 export interface FormResponseDTO {

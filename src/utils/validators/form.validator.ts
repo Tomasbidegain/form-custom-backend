@@ -60,6 +60,7 @@ export const updateFieldSchema = z
 
 export const createResponseSchema = z.object({
   email: z.string().email("INVALID_EMAIL").optional(),
+  turnstileToken: z.string().optional(),
   fields: z
     .array(
       z.object({

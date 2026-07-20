@@ -6,6 +6,8 @@ import {
 import { OptionsQuery, PaginatedResponse } from "../types/pagination.types";
 import { ERRORS } from "../utils/errors";
 import { AppBusinessError } from "../utils/custom-error";
+import { validateFieldValue } from "../utils/validators/field-validator";
+import { verifyTurnstileToken } from "../utils/captcha";
 
 export class FormResponseService {
   async submitResponse(
@@ -43,6 +45,22 @@ export class FormResponseService {
       }
     }
 
+    // Validar CAPTCHA si está habilitado
+    if (form.captchaEnabled) {
+      if (!data.turnstileToken) {
+        throw new Error(ERRORS.CAPTCHA_REQUIRED.code);
+      }
+
+      const captchaResult = await verifyTurnstileToken(
+        data.turnstileToken,
+        ipAddress,
+      );
+
+      if (!captchaResult.success) {
+        throw new Error(ERRORS.CAPTCHA_INVALID.code);
+      }
+    }
+
     // Validar que los fieldIds pertenezcan al form (ANTES de required)
     const fieldIds = form.fields.map((field) => field.id);
     const invalidFieldIds = data.fields
@@ -68,6 +86,40 @@ export class FormResponseService {
           fieldId: field.id,
           label: field.label,
         })),
+      });
+    }
+
+    // Validar valores de cada field según su tipo
+    const fieldMap = new Map(form.fields.map((f) => [f.id, f]));
+    const invalidFields: Array<{
+      fieldId: string;
+      label: string;
+      errorCode: string;
+    }> = [];
+
+    for (const fieldData of data.fields) {
+      const field = fieldMap.get(fieldData.fieldId);
+      if (!field) continue; // Ya validado arriba
+
+      const validation = validateFieldValue(
+        field.type,
+        fieldData.value,
+        field.options || [],
+        field.required,
+      );
+
+      if (!validation.isValid && validation.error) {
+        invalidFields.push({
+          fieldId: field.id,
+          label: field.label,
+          errorCode: validation.error.code,
+        });
+      }
+    }
+
+    if (invalidFields.length > 0) {
+      throw new AppBusinessError(ERRORS.INVALID_FIELD_VALUE.code, {
+        invalidFields,
       });
     }
 
