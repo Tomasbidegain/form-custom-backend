@@ -18,3 +18,17 @@ export interface FormResponseDTO {
     value: string
   }[]
 }
+
+export interface MyResponseDTO {
+  id: string
+  formId: string
+  formTitle: string
+  email: string | null
+  ipAddress: string | null
+  submittedAt: Date
+  fields: {
+    fieldId: string
+    fieldLabel: string
+    value: string
+  }[]
+}

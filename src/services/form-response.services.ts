@@ -2,6 +2,7 @@ import prisma from "../config/database";
 import {
   CreateFormResponseDTO,
   FormResponseDTO,
+  MyResponseDTO,
 } from "../types/form-response.types";
 import { OptionsQuery, PaginatedResponse } from "../types/pagination.types";
 import { ERRORS } from "../utils/errors";
@@ -308,6 +309,71 @@ export class FormResponseService {
     });
   }
 
+  async getMyResponses(
+    userId: string,
+    options: OptionsQuery,
+  ): Promise<PaginatedResponse<MyResponseDTO>> {
+    const where: any = { userId };
+
+    if (options.search) {
+      where.form = {
+        title: { contains: options.search, mode: "insensitive" },
+      };
+    }
+
+    const [responses, total] = await prisma.$transaction([
+      prisma.formResponse.findMany({
+        where,
+        include: {
+          form: {
+            select: {
+              id: true,
+              title: true,
+            },
+          },
+          fieldResponses: {
+            include: {
+              field: true,
+            },
+            orderBy: {
+              field: {
+                createdAt: "asc",
+              },
+            },
+          },
+        },
+        skip: (options.page - 1) * options.limit,
+        take: options.limit,
+        orderBy: { [options.sortBy]: options.sortOrder },
+      }),
+      prisma.formResponse.count({ where }),
+    ]);
+
+    const totalPages = Math.ceil(total / options.limit);
+
+    return {
+      data: responses.map((r) => ({
+        id: r.id,
+        formId: r.formId,
+        formTitle: r.form.title,
+        email: r.email,
+        ipAddress: r.ipAddress,
+        submittedAt: r.submittedAt,
+        fields: r.fieldResponses.map((fr) => ({
+          fieldId: fr.fieldId,
+          fieldLabel: fr.field.label,
+          value: fr.value,
+        })),
+      })),
+      pagination: {
+        page: options.page,
+        limit: options.limit,
+        total,
+        totalPages,
+      },
+    };
+  }
+
   async exportResponses(
     userId: string,
     formId: string,
@@ -349,6 +415,7 @@ export class FormResponseService {
     // Construir headers: metadatos + labels de los fields
     const headers = [
       "Response ID",
+      "User ID",
       "Email",
       "IP Address",
       "Submitted At",
@@ -363,6 +430,7 @@ export class FormResponseService {
 
       return [
         response.id,
+        response.userId || "",
         response.email || "",
         response.ipAddress || "",
         response.submittedAt.toISOString(),
