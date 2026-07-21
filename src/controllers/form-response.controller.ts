@@ -146,6 +146,25 @@ export class FormResponseController {
     }
   }
 
+  async getFormStats(req: Request, res: Response) {
+    try {
+      const userId = req.userId;
+      const formId = req.params.formId as string;
+
+      if (!userId) {
+        return res.status(401).json(ERRORS.UNAUTHORIZED);
+      }
+
+      const stats = await formResponseService.getFormStats(userId, formId);
+      res.json(stats);
+    } catch (error) {
+      if (error instanceof Error && error.message === ERRORS.FORM_NOT_FOUND.code) {
+        return res.status(404).json(ERRORS.FORM_NOT_FOUND);
+      }
+      res.status(500).json(ERRORS.INTERNAL_SERVER_ERROR);
+    }
+  }
+
   async exportResponses(req: Request, res: Response) {
     try {
       const userId = req.userId;

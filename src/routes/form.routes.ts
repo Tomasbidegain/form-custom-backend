@@ -55,4 +55,9 @@ router.delete("/:formId/responses/:responseId", authMiddleware, (req, res) =>
   formResponseController.deleteResponse(req, res),
 );
 
+// Stats (auth)
+router.get("/:formId/stats", authMiddleware, (req, res) =>
+  formResponseController.getFormStats(req, res),
+);
+
 export default router;

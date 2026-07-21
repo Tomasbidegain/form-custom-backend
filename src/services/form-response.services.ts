@@ -10,6 +10,7 @@ import { AppBusinessError } from "../utils/custom-error";
 import { validateFieldValue } from "../utils/validators/field-validator";
 import { verifyTurnstileToken } from "../utils/captcha";
 import { stringify } from "csv-stringify/sync";
+import { FormStatsDTO } from "../types/form-stats.types";
 
 export class FormResponseService {
   async submitResponse(
@@ -326,6 +327,121 @@ export class FormResponseService {
         },
       });
     });
+  }
+
+  async getFormStats(
+    userId: string,
+    formId: string,
+  ): Promise<FormStatsDTO> {
+    // Verificar ownership del form
+    const form = await prisma.form.findUnique({
+      where: { id: formId, userId },
+      include: {
+        fields: true,
+      },
+    });
+
+    if (!form) {
+      throw new Error(ERRORS.FORM_NOT_FOUND.code);
+    }
+
+    // Obtener todas las respuestas
+    const responses = await prisma.formResponse.findMany({
+      where: { formId },
+      select: {
+        id: true,
+        submittedAt: true,
+        fieldResponses: {
+          select: {
+            fieldId: true,
+            value: true,
+          },
+        },
+      },
+      orderBy: {
+        submittedAt: "asc",
+      },
+    });
+
+    // Total de respuestas
+    const totalResponses = responses.length;
+
+    // Respuestas por día (últimos 30 días)
+    const responsesByDay: { date: string; count: number }[] = [];
+    const today = new Date();
+    const thirtyDaysAgo = new Date(today.getTime() - 30 * 24 * 60 * 60 * 1000);
+
+    // Inicializar últimos 30 días con 0
+    for (let i = 29; i >= 0; i--) {
+      const date = new Date(today.getTime() - i * 24 * 60 * 60 * 1000);
+      responsesByDay.push({
+        date: date.toISOString().split("T")[0],
+        count: 0,
+      });
+    }
+
+    // Contar respuestas por día
+    responses.forEach((response) => {
+      const responseDate = response.submittedAt.toISOString().split("T")[0];
+      const dayIndex = responsesByDay.findIndex((d) => d.date === responseDate);
+      if (dayIndex !== -1) {
+        responsesByDay[dayIndex].count++;
+      }
+    });
+
+    // Distribución por campo (solo para SELECT, RADIO, CHECKBOX)
+    const fieldDistributions: FormStatsDTO["fieldDistributions"] = [];
+    const fieldsWithOptions = form.fields.filter(
+      (field) =>
+        field.type === "SELECT" ||
+        field.type === "RADIO" ||
+        field.type === "CHECKBOX",
+    );
+
+    fieldsWithOptions.forEach((field) => {
+      const distribution: {
+        value: string;
+        count: number;
+        percentage: number;
+      }[] = [];
+
+      // Contar valores para este campo
+      const valueCounts = new Map<string, number>();
+      responses.forEach((response) => {
+        const fieldResponse = response.fieldResponses.find(
+          (fr) => fr.fieldId === field.id,
+        );
+        if (fieldResponse) {
+          const currentValue = valueCounts.get(fieldResponse.value) || 0;
+          valueCounts.set(fieldResponse.value, currentValue + 1);
+        }
+      });
+
+      // Calcular porcentajes
+      valueCounts.forEach((count, value) => {
+        distribution.push({
+          value,
+          count,
+          percentage: totalResponses > 0 ? (count / totalResponses) * 100 : 0,
+        });
+      });
+
+      // Ordenar por count descendente
+      distribution.sort((a, b) => b.count - a.count);
+
+      fieldDistributions.push({
+        fieldId: field.id,
+        fieldLabel: field.label,
+        fieldType: field.type,
+        distribution,
+      });
+    });
+
+    return {
+      totalResponses,
+      responsesByDay,
+      fieldDistributions,
+    };
   }
 
   async getMyResponses(
