@@ -4,6 +4,11 @@ export default defineConfig({
   test: {
     globals: true,
     environment: 'node',
+    env: {
+      NODE_ENV: 'test',
+    },
+    envDir: '.',
+    envPrefix: '',
     setupFiles: ['./tests/setup.ts'],
     testTimeout: 10000, // 10s timeout for DB operations
     coverage: {
