@@ -261,6 +261,7 @@ export const ERRORS = {
     message: "Form owners cannot submit responses to their own forms",
   },
 
+  // Files
   FILE_REQUIRED: {
     code: "FILE_REQUIRED",
     message: "A file is required",
@@ -276,6 +277,12 @@ export const ERRORS = {
   FILE_UPLOAD_FAILED: {
     code: "FILE_UPLOAD_FAILED",
     message: "File upload failed",
+  },
+
+  // Socket
+  SOCKET_NOTIFICATION_FAILED: {
+    code: "SOCKET_NOTIFICATION_FAILED",
+    message: "Failed to send real-time notification",
   },
 } as const;
 

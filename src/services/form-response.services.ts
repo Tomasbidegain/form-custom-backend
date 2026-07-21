@@ -11,6 +11,7 @@ import { validateFieldValue } from "../utils/validators/field-validator";
 import { verifyTurnstileToken } from "../utils/captcha";
 import { stringify } from "csv-stringify/sync";
 import { FormStatsDTO } from "../types/form-stats.types";
+import { getIO } from "../config/socket";
 
 export class FormResponseService {
   async submitResponse(
@@ -164,6 +165,22 @@ export class FormResponseService {
 
       return response;
     });
+
+    try {
+      const io = getIO();
+      
+      io.to(`user-${form.userId}`).emit("notification", {
+        type: "success",
+        message: `New response received for form "${form.title}"`,
+        response: {
+          id: formResponse.id,
+          email: formResponse.email,
+          submittedAt: formResponse.submittedAt.toISOString(),
+        },
+      });
+    } catch (error) {
+      console.error("Error emitting socket notification:", error);
+    }
 
     return {
       id: formResponse.id,
