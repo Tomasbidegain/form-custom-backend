@@ -1,39 +1,33 @@
-import type { Socket } from "socket.io";
-import { verifyToken } from "../utils/jwt";
-import { ERRORS } from "../utils/errors";
-import type {
-  ClientToServerEvents,
-  InterServerEvents,
-  ServerToClientEvents,
-  SocketData,
-} from "../types/socket.types";
+import { Request, Response, NextFunction } from 'express';
+import { verifyToken } from '../utils/jwt';
+import { ERRORS } from '../utils/errors';
 
-type SocketType = Socket<
-  ClientToServerEvents,
-  ServerToClientEvents,
-  InterServerEvents,
-  SocketData
->;
-
-export function socketAuthMiddleware(
-  socket: SocketType,
-  next: (err?: Error) => void,
-) {
-  const token = socket.handshake.auth.token;
-
-  if (!token) {
-    return next(new Error(ERRORS.TOKEN_MISSING.code));
+declare global {
+  namespace Express {
+    interface Request {
+      userId?: string;
+    }
   }
+}
 
+export function authMiddleware(
+  req: Request,
+  res: Response,
+  next: NextFunction,
+) {
   try {
+    const authHeader = req.headers.authorization;
+
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      return res.status(401).json(ERRORS.TOKEN_MISSING);
+    }
+
+    const token = authHeader.split(' ')[1];
     const decoded = verifyToken(token);
-    socket.data.userId = decoded.userId;
-    socket.data.formsJoined = [];
-    
-    socket.join(`user-${decoded.userId}`);
-    
+
+    req.userId = decoded.userId;
     next();
   } catch (error) {
-    next(new Error(ERRORS.TOKEN_INVALID.code));
+    return res.status(401).json(ERRORS.TOKEN_INVALID);
   }
 }
