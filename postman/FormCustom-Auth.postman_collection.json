@@ -2,7 +2,7 @@
   "info": {
     "_postman_id": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
     "name": "FormCustom API",
-    "description": "API endpoints for FormCustom: authentication, form management, and responses.",
+    "description": "Complete API for FormCustom: authentication, form management, responses, file uploads, and real-time notifications.",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "variable": [
@@ -381,6 +381,31 @@
           "response": []
         },
         {
+          "_postman_id": "form-stats",
+          "name": "Get Form Stats",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/forms/{{form_id}}/stats",
+              "host": ["{{base_url}}"],
+              "path": ["forms", "{{form_id}}", "stats"]
+            },
+            "description": "Get form statistics: total responses and responses by day (last 30 days). Requires ownership."
+          },
+          "response": []
+        },
+        {
           "_postman_id": "field-add",
           "name": "Add Field",
           "request": {
@@ -478,7 +503,7 @@
     {
       "_postman_id": "folder-responses",
       "name": "Responses",
-      "description": "Form response endpoints: submit (public), list, get by ID, delete.",
+      "description": "Form response endpoints: submit (public), list, get by ID, delete, export CSV.",
       "item": [
         {
           "_postman_id": "response-submit",
@@ -493,14 +518,14 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"email\": \"user@example.com\",\n  \"fields\": [\n    { \"fieldId\": \"{{field_id}}\", \"value\": \"John Doe\" },\n    { \"fieldId\": \"{{field_id_2}}\", \"value\": \"john@example.com\" }\n  ]\n}"
+              "raw": "{\n  \"email\": \"user@example.com\",\n  \"turnstileToken\": \"optional_captcha_token\",\n  \"fields\": [\n    { \"fieldId\": \"{{field_id}}\", \"value\": \"John Doe\" },\n    { \"fieldId\": \"{{field_id_2}}\", \"value\": \"john@example.com\" }\n  ]\n}"
             },
             "url": {
               "raw": "{{base_url}}/forms/{{form_id}}/responses",
               "host": ["{{base_url}}"],
               "path": ["forms", "{{form_id}}", "responses"]
             },
-            "description": "Submit a form response. Public endpoint (no auth required)."
+            "description": "Submit a form response. Public endpoint (no auth required). Includes CAPTCHA validation if enabled."
           },
           "response": []
         },
@@ -557,7 +582,7 @@
               "host": ["{{base_url}}"],
               "path": ["forms", "{{form_id}}", "responses", "{{response_id}}"]
             },
-            "description": "Get a specific response with all field values. Requires ownership."
+            "description": "Get a specific response with all field values and grid layout. Requires ownership."
           },
           "response": []
         },
@@ -583,6 +608,146 @@
               "path": ["forms", "{{form_id}}", "responses", "{{response_id}}"]
             },
             "description": "Delete a specific response. Decrements form response count. Returns 204 No Content."
+          },
+          "response": []
+        },
+        {
+          "_postman_id": "response-export",
+          "name": "Export Responses CSV",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/forms/{{form_id}}/responses/export",
+              "host": ["{{base_url}}"],
+              "path": ["forms", "{{form_id}}", "responses", "export"]
+            },
+            "description": "Export all form responses as CSV file. Requires ownership."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "_postman_id": "folder-files",
+      "name": "Files",
+      "description": "File upload and management with Cloudinary.",
+      "item": [
+        {
+          "_postman_id": "file-upload",
+          "name": "Upload File",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "file",
+                  "type": "file",
+                  "src": "/path/to/file.jpg"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{base_url}}/files/upload",
+              "host": ["{{base_url}}"],
+              "path": ["files", "upload"]
+            },
+            "description": "Upload a file to Cloudinary. Returns the file URL. Max 5MB. Allowed types: images, PDF, text."
+          },
+          "response": []
+        },
+        {
+          "_postman_id": "file-delete",
+          "name": "Delete File",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"url\": \"https://res.cloudinary.com/.../image.jpg\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/files",
+              "host": ["{{base_url}}"],
+              "path": ["files"]
+            },
+            "description": "Delete a file from Cloudinary by URL."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "_postman_id": "folder-users",
+      "name": "Users",
+      "description": "User-related endpoints.",
+      "item": [
+        {
+          "_postman_id": "user-my-responses",
+          "name": "Get My Responses",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/users/me/responses?page=1&limit=10&search=&sortBy=submittedAt&sortOrder=desc",
+              "host": ["{{base_url}}"],
+              "path": ["users", "me", "responses"],
+              "query": [
+                { "key": "page", "value": "1" },
+                { "key": "limit", "value": "10" },
+                { "key": "search", "value": "" },
+                { "key": "sortBy", "value": "submittedAt" },
+                { "key": "sortOrder", "value": "desc" }
+              ]
+            },
+            "description": "Get all responses submitted by the authenticated user across all forms. Supports pagination and search."
           },
           "response": []
         }
