@@ -1,6 +1,6 @@
 export interface AppError {
-  code: string
-  message: string
+  code: string;
+  message: string;
 }
 
 export const ERRORS = {
@@ -101,7 +101,8 @@ export const ERRORS = {
   // Auth - Success messages (used as response codes)
   USER_REGISTERED_SUCCESSFULLY: {
     code: "USER_REGISTERED_SUCCESSFULLY",
-    message: "User registered successfully. Please check your email to verify your account",
+    message:
+      "User registered successfully. Please check your email to verify your account",
   },
   EMAIL_VERIFIED_SUCCESSFULLY: {
     code: "EMAIL_VERIFIED_SUCCESSFULLY",
@@ -259,10 +260,27 @@ export const ERRORS = {
     code: "FORM_OWNER_CANNOT_RESPOND",
     message: "Form owners cannot submit responses to their own forms",
   },
-} as const
 
-export type ErrorCode = keyof typeof ERRORS
+  FILE_REQUIRED: {
+    code: "FILE_REQUIRED",
+    message: "A file is required",
+  },
+  INVALID_FILE_TYPE: {
+    code: "INVALID_FILE_TYPE",
+    message: "The file type is not allowed",
+  },
+  FILE_TOO_LARGE: {
+    code: "FILE_TOO_LARGE",
+    message: "The file size exceeds the maximum limit (5MB)",
+  },
+  FILE_UPLOAD_FAILED: {
+    code: "FILE_UPLOAD_FAILED",
+    message: "File upload failed",
+  },
+} as const;
+
+export type ErrorCode = keyof typeof ERRORS;
 
 export function getError(code: ErrorCode): AppError {
-  return ERRORS[code]
+  return ERRORS[code];
 }
