@@ -336,9 +336,6 @@ export class FormResponseService {
     // Verificar ownership del form
     const form = await prisma.form.findUnique({
       where: { id: formId, userId },
-      include: {
-        fields: true,
-      },
     });
 
     if (!form) {
@@ -351,12 +348,6 @@ export class FormResponseService {
       select: {
         id: true,
         submittedAt: true,
-        fieldResponses: {
-          select: {
-            fieldId: true,
-            value: true,
-          },
-        },
       },
       orderBy: {
         submittedAt: "asc",
@@ -369,7 +360,6 @@ export class FormResponseService {
     // Respuestas por día (últimos 30 días)
     const responsesByDay: { date: string; count: number }[] = [];
     const today = new Date();
-    const thirtyDaysAgo = new Date(today.getTime() - 30 * 24 * 60 * 60 * 1000);
 
     // Inicializar últimos 30 días con 0
     for (let i = 29; i >= 0; i--) {
@@ -389,58 +379,9 @@ export class FormResponseService {
       }
     });
 
-    // Distribución por campo (solo para SELECT, RADIO, CHECKBOX)
-    const fieldDistributions: FormStatsDTO["fieldDistributions"] = [];
-    const fieldsWithOptions = form.fields.filter(
-      (field) =>
-        field.type === "SELECT" ||
-        field.type === "RADIO" ||
-        field.type === "CHECKBOX",
-    );
-
-    fieldsWithOptions.forEach((field) => {
-      const distribution: {
-        value: string;
-        count: number;
-        percentage: number;
-      }[] = [];
-
-      // Contar valores para este campo
-      const valueCounts = new Map<string, number>();
-      responses.forEach((response) => {
-        const fieldResponse = response.fieldResponses.find(
-          (fr) => fr.fieldId === field.id,
-        );
-        if (fieldResponse) {
-          const currentValue = valueCounts.get(fieldResponse.value) || 0;
-          valueCounts.set(fieldResponse.value, currentValue + 1);
-        }
-      });
-
-      // Calcular porcentajes
-      valueCounts.forEach((count, value) => {
-        distribution.push({
-          value,
-          count,
-          percentage: totalResponses > 0 ? (count / totalResponses) * 100 : 0,
-        });
-      });
-
-      // Ordenar por count descendente
-      distribution.sort((a, b) => b.count - a.count);
-
-      fieldDistributions.push({
-        fieldId: field.id,
-        fieldLabel: field.label,
-        fieldType: field.type,
-        distribution,
-      });
-    });
-
     return {
       totalResponses,
       responsesByDay,
-      fieldDistributions,
     };
   }
 
