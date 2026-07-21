@@ -3,13 +3,22 @@ import request from 'supertest';
 import app from '../src/app';
 import prisma from '../src/config/database';
 
-// Unique email to avoid conflicts
 const TEST_EMAIL = `test-${Date.now()}@example.com`;
 const TEST_PASSWORD = 'Password123';
 
 describe('Auth Endpoints', () => {
   // Cleanup after all tests
   afterAll(async () => {
+    // Delete in order to avoid foreign key constraints
+    await prisma.formResponse.deleteMany({
+      where: { form: { user: { email: { startsWith: 'test-' } } } },
+    });
+    await prisma.field.deleteMany({
+      where: { form: { user: { email: { startsWith: 'test-' } } } },
+    });
+    await prisma.form.deleteMany({
+      where: { user: { email: { startsWith: 'test-' } } },
+    });
     await prisma.user.deleteMany({
       where: { email: { startsWith: 'test-' } },
     });
@@ -62,29 +71,7 @@ describe('Auth Endpoints', () => {
   });
 
   describe('POST /api/auth/login', () => {
-    it('should return 401 if email is not verified', async () => {
-      const response = await request(app)
-        .post('/api/auth/login')
-        .send({
-          email: TEST_EMAIL,
-          password: TEST_PASSWORD,
-        });
-
-      expect(response.status).toBe(401);
-      expect(response.body.code).toBe('EMAIL_NOT_VERIFIED');
-    });
-
     it('should return 401 for invalid credentials', async () => {
-      // Manually verify the user in DB to test password validation
-      await prisma.user.update({
-        where: { email: TEST_EMAIL },
-        data: {
-          isVerified: true,
-          verificationToken: null,
-          verificationExpires: null,
-        },
-      });
-
       const response = await request(app)
         .post('/api/auth/login')
         .send({
@@ -96,7 +83,38 @@ describe('Auth Endpoints', () => {
       expect(response.body.code).toBe('INVALID_CREDENTIALS');
     });
 
+    it('should return 401 if email is not verified', async () => {
+      // Create a new unverified user
+      const unverifiedEmail = `unverified-${Date.now()}@example.com`;
+      await request(app).post('/api/auth/register').send({
+        email: unverifiedEmail,
+        name: 'Unverified',
+        lastName: 'User',
+        password: TEST_PASSWORD,
+      });
+
+      const response = await request(app)
+        .post('/api/auth/login')
+        .send({
+          email: unverifiedEmail,
+          password: TEST_PASSWORD,
+        });
+
+      expect(response.status).toBe(401);
+      expect(response.body.code).toBe('EMAIL_NOT_VERIFIED');
+    });
+
     it('should login successfully after verification', async () => {
+      // Manually verify the user in DB to simulate email click
+      await prisma.user.update({
+        where: { email: TEST_EMAIL },
+        data: {
+          isVerified: true,
+          verificationToken: null,
+          verificationExpires: null,
+        },
+      });
+
       const response = await request(app)
         .post('/api/auth/login')
         .send({
