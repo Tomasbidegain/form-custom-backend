@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeAll, afterAll, vi } from 'vitest';
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import request from 'supertest';
 import app from '../src/app';
 import prisma from '../src/config/database';
@@ -8,35 +8,36 @@ import fs from 'fs';
 // Import Cloudinary mock
 import './mocks/cloudinary';
 
-const TEST_EMAIL = `test-files-${Date.now()}-${Math.random().toString(36).substr(2, 9)}@example.com`;
 const TEST_PASSWORD = 'Password123';
 let authToken: string;
+let userEmail: string;
 
 describe('File Endpoints', () => {
-  beforeAll(async () => {
+  beforeEach(async () => {
+    userEmail = `test-files-${Date.now()}-${Math.random().toString(36).substr(2, 9)}@example.com`;
+
     // Create and verify user
     await request(app).post('/api/auth/register').send({
-      email: TEST_EMAIL,
+      email: userEmail,
       name: 'Test',
       lastName: 'User',
       password: TEST_PASSWORD,
     });
 
     await prisma.user.update({
-      where: { email: TEST_EMAIL },
+      where: { email: userEmail },
       data: { isVerified: true, verificationToken: null, verificationExpires: null },
     });
 
     const loginRes = await request(app).post('/api/auth/login').send({
-      email: TEST_EMAIL,
+      email: userEmail,
       password: TEST_PASSWORD,
     });
 
     authToken = loginRes.body.token;
   });
 
-  afterAll(async () => {
-    // Delete in order to avoid foreign key constraints
+  afterEach(async () => {
     await prisma.formResponse.deleteMany({
       where: { form: { user: { email: { startsWith: 'test-' } } } },
     });
@@ -47,7 +48,6 @@ describe('File Endpoints', () => {
       where: { user: { email: { startsWith: 'test-' } } },
     });
     await prisma.user.deleteMany({ where: { email: { startsWith: 'test-' } } });
-    await prisma.$disconnect();
   });
 
   describe('POST /api/files/upload', () => {

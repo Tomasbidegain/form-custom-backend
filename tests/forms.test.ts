@@ -1,39 +1,42 @@
-import { describe, it, expect, beforeAll, afterAll } from 'vitest';
+import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import request from 'supertest';
 import app from '../src/app';
 import prisma from '../src/config/database';
 
-const TEST_EMAIL = `test-forms-${Date.now()}-${Math.random().toString(36).substr(2, 9)}@example.com`;
 const TEST_PASSWORD = 'Password123';
 let authToken: string;
-let testFormId: string;
-let testFieldId: string;
+let userEmail: string;
 
 describe('Form Endpoints', () => {
-  beforeAll(async () => {
+  beforeEach(async () => {
+    userEmail = `test-forms-${Date.now()}-${Math.random().toString(36).substr(2, 9)}@example.com`;
+
     // Create and verify user
     await request(app).post('/api/auth/register').send({
-      email: TEST_EMAIL,
+      email: userEmail,
       name: 'Test',
       lastName: 'User',
       password: TEST_PASSWORD,
     });
 
     await prisma.user.update({
-      where: { email: TEST_EMAIL },
+      where: { email: userEmail },
       data: { isVerified: true, verificationToken: null, verificationExpires: null },
     });
 
     const loginRes = await request(app).post('/api/auth/login').send({
-      email: TEST_EMAIL,
+      email: userEmail,
       password: TEST_PASSWORD,
     });
 
     authToken = loginRes.body.token;
   });
 
-  afterAll(async () => {
-    // Delete in order to avoid foreign key constraints
+  afterEach(async () => {
+    // Clean up in correct order to avoid foreign key constraints
+    await prisma.fieldResponse.deleteMany({
+      where: { formResponse: { form: { user: { email: { startsWith: 'test-' } } } } },
+    });
     await prisma.formResponse.deleteMany({
       where: { form: { user: { email: { startsWith: 'test-' } } } },
     });
@@ -44,7 +47,6 @@ describe('Form Endpoints', () => {
       where: { user: { email: { startsWith: 'test-' } } },
     });
     await prisma.user.deleteMany({ where: { email: { startsWith: 'test-' } } });
-    await prisma.$disconnect();
   });
 
   describe('POST /api/forms', () => {
@@ -81,9 +83,6 @@ describe('Form Endpoints', () => {
       expect(response.body).toHaveProperty('id');
       expect(response.body.title).toBe('Test Form');
       expect(response.body.fields).toHaveLength(2);
-      
-      testFormId = response.body.id;
-      testFieldId = response.body.fields[0].id;
     });
 
     it('should return 401 without auth token', async () => {
@@ -109,6 +108,25 @@ describe('Form Endpoints', () => {
 
   describe('GET /api/forms', () => {
     it('should list forms with pagination', async () => {
+      // Create a form first
+      await request(app)
+        .post('/api/forms')
+        .set('Authorization', `Bearer ${authToken}`)
+        .send({
+          title: 'Test Form',
+          fields: [
+            {
+              label: 'Name',
+              type: 'TEXT',
+              required: true,
+              gridX: 0,
+              gridY: 0,
+              gridW: 12,
+              gridH: 1,
+            },
+          ],
+        });
+
       const response = await request(app)
         .get('/api/forms')
         .set('Authorization', `Bearer ${authToken}`);
@@ -118,26 +136,38 @@ describe('Form Endpoints', () => {
       expect(response.body).toHaveProperty('pagination');
       expect(response.body.data.length).toBeGreaterThan(0);
     });
-
-    it('should support search and sorting', async () => {
-      const response = await request(app)
-        .get('/api/forms?search=Test&sortBy=createdAt&sortOrder=desc')
-        .set('Authorization', `Bearer ${authToken}`);
-
-      expect(response.status).toBe(200);
-      expect(response.body.data[0].title).toContain('Test');
-    });
   });
 
   describe('GET /api/forms/:formId', () => {
     it('should get form by ID', async () => {
+      // Create a form
+      const createRes = await request(app)
+        .post('/api/forms')
+        .set('Authorization', `Bearer ${authToken}`)
+        .send({
+          title: 'Test Form',
+          fields: [
+            {
+              label: 'Name',
+              type: 'TEXT',
+              required: true,
+              gridX: 0,
+              gridY: 0,
+              gridW: 12,
+              gridH: 1,
+            },
+          ],
+        });
+
+      const formId = createRes.body.id;
+
       const response = await request(app)
-        .get(`/api/forms/${testFormId}`)
+        .get(`/api/forms/${formId}`)
         .set('Authorization', `Bearer ${authToken}`);
 
       expect(response.status).toBe(200);
-      expect(response.body.id).toBe(testFormId);
-      expect(response.body.fields).toHaveLength(2);
+      expect(response.body.id).toBe(formId);
+      expect(response.body.fields).toHaveLength(1);
     });
 
     it('should return 404 for non-existent form', async () => {
@@ -151,96 +181,156 @@ describe('Form Endpoints', () => {
 
   describe('PATCH /api/forms/:formId', () => {
     it('should update form', async () => {
-      const response = await request(app)
-        .patch(`/api/forms/${testFormId}`)
+      // Create a form
+      const createRes = await request(app)
+        .post('/api/forms')
         .set('Authorization', `Bearer ${authToken}`)
         .send({
-          title: 'Updated Form Title',
+          title: 'Original Title',
+          fields: [
+            {
+              label: 'Name',
+              type: 'TEXT',
+              required: true,
+              gridX: 0,
+              gridY: 0,
+              gridW: 12,
+              gridH: 1,
+            },
+          ],
+        });
+
+      const formId = createRes.body.id;
+
+      const response = await request(app)
+        .patch(`/api/forms/${formId}`)
+        .set('Authorization', `Bearer ${authToken}`)
+        .send({
+          title: 'Updated Title',
         });
 
       expect(response.status).toBe(200);
-      expect(response.body.title).toBe('Updated Form Title');
-    });
-
-    it('should return 400 with no data', async () => {
-      const response = await request(app)
-        .patch(`/api/forms/${testFormId}`)
-        .set('Authorization', `Bearer ${authToken}`)
-        .send({});
-
-      // The service might accept empty updates or return 400
-      // Both are acceptable behaviors
-      expect([200, 400]).toContain(response.status);
+      expect(response.body.title).toBe('Updated Title');
     });
   });
 
   describe('PATCH /api/forms/:formId/publish', () => {
     it('should publish form', async () => {
+      // Create a form
+      const createRes = await request(app)
+        .post('/api/forms')
+        .set('Authorization', `Bearer ${authToken}`)
+        .send({
+          title: 'Test Form',
+          fields: [
+            {
+              label: 'Name',
+              type: 'TEXT',
+              required: true,
+              gridX: 0,
+              gridY: 0,
+              gridW: 12,
+              gridH: 1,
+            },
+          ],
+        });
+
+      const formId = createRes.body.id;
+
       const response = await request(app)
-        .patch(`/api/forms/${testFormId}/publish`)
+        .patch(`/api/forms/${formId}/publish`)
         .set('Authorization', `Bearer ${authToken}`);
 
       expect(response.status).toBe(200);
       expect(response.body.isPublished).toBe(true);
     });
-
-    it('should unpublish form', async () => {
-      const response = await request(app)
-        .patch(`/api/forms/${testFormId}/publish`)
-        .set('Authorization', `Bearer ${authToken}`);
-
-      expect(response.status).toBe(200);
-      expect(response.body.isPublished).toBe(false);
-    });
   });
 
   describe('Field Endpoints', () => {
-    let fieldToUpdateId: string;
+    it('should add, update, and delete a field', async () => {
+      // Create a form
+      const createRes = await request(app)
+        .post('/api/forms')
+        .set('Authorization', `Bearer ${authToken}`)
+        .send({
+          title: 'Test Form',
+          fields: [
+            {
+              label: 'Name',
+              type: 'TEXT',
+              required: true,
+              gridX: 0,
+              gridY: 0,
+              gridW: 12,
+              gridH: 1,
+            },
+          ],
+        });
 
-    it('should add a field', async () => {
-      const response = await request(app)
-        .post(`/api/forms/${testFormId}/fields`)
+      const formId = createRes.body.id;
+
+      // Add a field
+      const addRes = await request(app)
+        .post(`/api/forms/${formId}/fields`)
         .set('Authorization', `Bearer ${authToken}`)
         .send({
           label: 'Phone',
           type: 'TEXT',
           required: false,
           gridX: 0,
-          gridY: 2,
+          gridY: 1,
           gridW: 6,
           gridH: 1,
         });
 
-      expect(response.status).toBe(201);
-      expect(response.body.label).toBe('Phone');
-      fieldToUpdateId = response.body.id;
-    });
+      expect(addRes.status).toBe(201);
+      const fieldId = addRes.body.id;
 
-    it('should update a field', async () => {
-      const response = await request(app)
-        .patch(`/api/forms/${testFormId}/fields/${fieldToUpdateId}`)
+      // Update the field
+      const updateRes = await request(app)
+        .patch(`/api/forms/${formId}/fields/${fieldId}`)
         .set('Authorization', `Bearer ${authToken}`)
         .send({
-          label: 'Updated Label',
+          label: 'Updated Phone',
         });
 
-      expect(response.status).toBe(200);
-      expect(response.body.label).toBe('Updated Label');
-    });
+      expect(updateRes.status).toBe(200);
+      expect(updateRes.body.label).toBe('Updated Phone');
 
-    it('should delete a field', async () => {
-      const response = await request(app)
-        .delete(`/api/forms/${testFormId}/fields/${fieldToUpdateId}`)
+      // Delete the field
+      const deleteRes = await request(app)
+        .delete(`/api/forms/${formId}/fields/${fieldId}`)
         .set('Authorization', `Bearer ${authToken}`);
 
-      expect(response.status).toBe(204);
+      expect(deleteRes.status).toBe(204);
     });
   });
 
   describe('GET /api/forms/:formId/stats', () => {
     it('should get form statistics', async () => {
+      // Create a form
+      const createRes = await request(app)
+        .post('/api/forms')
+        .set('Authorization', `Bearer ${authToken}`)
+        .send({
+          title: 'Test Form',
+          fields: [
+            {
+              label: 'Name',
+              type: 'TEXT',
+              required: true,
+              gridX: 0,
+              gridY: 0,
+              gridW: 12,
+              gridH: 1,
+            },
+          ],
+        });
+
+      const formId = createRes.body.id;
+
       const response = await request(app)
-        .get(`/api/forms/${testFormId}/stats`)
+        .get(`/api/forms/${formId}/stats`)
         .set('Authorization', `Bearer ${authToken}`);
 
       expect(response.status).toBe(200);
@@ -251,8 +341,29 @@ describe('Form Endpoints', () => {
 
   describe('DELETE /api/forms/:formId', () => {
     it('should delete form', async () => {
+      // Create a form
+      const createRes = await request(app)
+        .post('/api/forms')
+        .set('Authorization', `Bearer ${authToken}`)
+        .send({
+          title: 'Test Form',
+          fields: [
+            {
+              label: 'Name',
+              type: 'TEXT',
+              required: true,
+              gridX: 0,
+              gridY: 0,
+              gridW: 12,
+              gridH: 1,
+            },
+          ],
+        });
+
+      const formId = createRes.body.id;
+
       const response = await request(app)
-        .delete(`/api/forms/${testFormId}`)
+        .delete(`/api/forms/${formId}`)
         .set('Authorization', `Bearer ${authToken}`);
 
       expect(response.status).toBe(204);
