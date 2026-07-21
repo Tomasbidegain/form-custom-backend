@@ -3,7 +3,7 @@ import request from 'supertest';
 import app from '../src/app';
 import prisma from '../src/config/database';
 
-const TEST_EMAIL = `test-${Date.now()}@example.com`;
+const TEST_EMAIL = `test-responses-${Date.now()}-${Math.random().toString(36).substr(2, 9)}@example.com`;
 const TEST_PASSWORD = 'Password123';
 let authToken: string;
 let testFormId: string;

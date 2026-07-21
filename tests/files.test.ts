@@ -1,11 +1,14 @@
-import { describe, it, expect, beforeAll, afterAll } from 'vitest';
+import { describe, it, expect, beforeAll, afterAll, vi } from 'vitest';
 import request from 'supertest';
 import app from '../src/app';
 import prisma from '../src/config/database';
 import path from 'path';
 import fs from 'fs';
 
-const TEST_EMAIL = `test-${Date.now()}@example.com`;
+// Import Cloudinary mock
+import './mocks/cloudinary';
+
+const TEST_EMAIL = `test-files-${Date.now()}-${Math.random().toString(36).substr(2, 9)}@example.com`;
 const TEST_PASSWORD = 'Password123';
 let authToken: string;
 

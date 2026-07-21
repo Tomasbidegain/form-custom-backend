@@ -3,7 +3,7 @@ import request from 'supertest';
 import app from '../src/app';
 import prisma from '../src/config/database';
 
-const TEST_EMAIL = `test-${Date.now()}@example.com`;
+const TEST_EMAIL = `test-${Date.now()}-${Math.random().toString(36).substr(2, 9)}@example.com`;
 const TEST_PASSWORD = 'Password123';
 
 describe('Auth Endpoints', () => {
@@ -72,6 +72,16 @@ describe('Auth Endpoints', () => {
 
   describe('POST /api/auth/login', () => {
     it('should return 401 for invalid credentials', async () => {
+      // Verify the user first so we can test password validation
+      await prisma.user.update({
+        where: { email: TEST_EMAIL },
+        data: {
+          isVerified: true,
+          verificationToken: null,
+          verificationExpires: null,
+        },
+      });
+
       const response = await request(app)
         .post('/api/auth/login')
         .send({
