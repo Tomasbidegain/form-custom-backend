@@ -133,7 +133,7 @@ describe('Response Endpoints', () => {
       const response = await request(app)
         .post('/api/forms/non-existent-id/responses')
         .send({
-          fields: [{ fieldId: 'test-id', value: 'test' }],
+          fields: [{ fieldId: '123e4567-e89b-12d3-a456-426614174000', value: 'test' }],
         });
 
       expect(response.status).toBe(404);

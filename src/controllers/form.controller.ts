@@ -277,7 +277,7 @@ export class FormController {
         label: result.data.label,
         type: result.data.type,
         required: result.data.required,
-        options: result.data.options ?? null,
+        options: result.data.options,
         gridX: result.data.gridX,
         gridY: result.data.gridY,
         gridW: result.data.gridW,

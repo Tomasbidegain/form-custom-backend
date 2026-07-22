@@ -1,12 +1,21 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
-import request from 'supertest';
-import app from '../src/app';
-import prisma from '../src/config/database';
 import path from 'path';
 import fs from 'fs';
 
-// Import Cloudinary mock
-import './mocks/cloudinary';
+// Mock FileService BEFORE importing app
+vi.mock('../src/services/file.services', () => {
+  return {
+    FileService: class MockFileService {
+      uploadFile = async () => 'https://res.cloudinary.com/test-cloud/image/upload/v1234567890/form-custom-uploads/test-image.jpg';
+      deleteFile = async () => undefined;
+    },
+  };
+});
+
+// Now import app (mocks are already set up)
+import request from 'supertest';
+import app from '../src/app';
+import prisma from '../src/config/database';
 
 const TEST_PASSWORD = 'Password123';
 let authToken: string;
