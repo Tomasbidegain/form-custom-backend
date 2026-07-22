@@ -85,7 +85,15 @@ export class AuthController {
         result.data.email,
         result.data.password,
       );
-      res.json(data);
+
+      res.cookie('token', data.token, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: 'lax',
+        maxAge: 7 * 24 * 60 * 60 * 1000, // 7 días
+      });
+
+      res.json({ user: data.user });
     } catch (error) {
       if (error instanceof Error) {
         if (error.message === ERRORS.INVALID_CREDENTIALS.code) {

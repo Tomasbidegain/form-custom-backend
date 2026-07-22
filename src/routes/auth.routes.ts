@@ -32,10 +32,22 @@ router.get(
     const user = req.user as any;
     const token = generateToken(user.id);
 
-    res.redirect(`${process.env.FRONTEND_URL}/auth/callback?token=${token}`);
+    res.cookie("token", token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "lax",
+      maxAge: 7 * 24 * 60 * 60 * 1000, // 7 días
+    });
+
+    res.redirect(`${process.env.FRONTEND_URL}/auth/callback`);
   },
 );
 
 router.get("/me", authMiddleware, (req, res) => authController.getMe(req, res));
+
+router.post("/logout", (req, res) => {
+  res.clearCookie("token");
+  res.json({ message: "LOGOUT_SUCCESS" });
+});
 
 export default router;
