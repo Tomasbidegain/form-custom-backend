@@ -9,7 +9,7 @@ export async function sendResetPasswordEmail({
   lastName,
   token,
 }: SendResetPasswordEmailDTO) {
-  const resetPasswordUrl = `${process.env.FRONTEND_URL}/reset-password?token=${token}`;
+  const resetPasswordUrl = `${process.env.FRONTEND_URL}/auth/reset-password?token=${token}`;
 
   await resend.emails.send({
     from: "CustomForm@resend.dev",
