@@ -64,7 +64,7 @@ export async function sendResetPasswordEmail({
                                               <a href="${resetPasswordUrl}"
                                                 style="display:inline-block;
                                                         background:#2563eb;
-                                                        color:#custom-formf;
+                                                        color:#ffffff;
                                                         text-decoration:none;
                                                         padding:16px 32px;
                                                         border-radius:8px;
